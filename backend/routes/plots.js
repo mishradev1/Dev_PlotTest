@@ -1,206 +1,250 @@
 const express = require('express');
-const fs = require('fs');
-const csv = require('csv-parser');
-const path = require('path');
-const authMiddleware = require('../middleware/auth');
+const { protect } = require('../middleware/auth');
+const Dataset = require('../models/Dataset');
+const DataRecord = require('../models/DataRecord');
+const Plot = require('../models/Plot');
 
 const router = express.Router();
 
-// Generate plot data
-router.post('/generate', authMiddleware, async (req, res) => {
+// @desc    Generate plot data
+// @route   POST /api/plots/generate
+// @access  Private
+router.post('/generate', protect, async (req, res) => {
   try {
-    const { fileId, xAxis, yAxis, plotType = 'scatter' } = req.body;
+    const { datasetId, plotType, xAxis, yAxis, title, filters } = req.body;
 
-    if (!fileId || !xAxis || !yAxis) {
-      return res.status(400).json({ 
-        error: { message: 'fileId, xAxis, and yAxis are required' } 
+    // Validate input
+    if (!datasetId || !plotType || !xAxis) {
+      return res.status(400).json({
+        success: false,
+        message: 'Dataset ID, plot type, and X-axis are required'
       });
     }
 
-    // Get file metadata
-    const metadataPath = path.join(process.env.UPLOAD_DIR || './uploads', 'metadata.json');
-    let allMetadata = [];
-    
-    try {
-      const existingData = fs.readFileSync(metadataPath, 'utf8');
-      allMetadata = JSON.parse(existingData);
-    } catch (error) {
-      return res.status(404).json({ error: { message: 'File metadata not found' } });
-    }
-
-    const fileMetadata = allMetadata.find(file => file.id === fileId && file.userId === req.user.userId);
-    
-    if (!fileMetadata) {
-      return res.status(404).json({ error: { message: 'File not found or access denied' } });
-    }
-
-    // Validate columns exist
-    if (!fileMetadata.headers.includes(xAxis) || !fileMetadata.headers.includes(yAxis)) {
-      return res.status(400).json({ 
-        error: { message: 'Invalid column names' } 
-      });
-    }
-
-    // Read CSV data
-    const results = [];
-    const parsePromise = new Promise((resolve, reject) => {
-      fs.createReadStream(fileMetadata.path)
-        .pipe(csv())
-        .on('data', (data) => {
-          results.push(data);
-        })
-        .on('end', () => {
-          resolve();
-        })
-        .on('error', (error) => {
-          reject(error);
-        });
+    // Verify dataset ownership
+    const dataset = await Dataset.findOne({
+      _id: datasetId,
+      uploadedBy: req.user.id
     });
 
-    await parsePromise;
+    if (!dataset) {
+      return res.status(404).json({
+        success: false,
+        message: 'Dataset not found'
+      });
+    }
 
-    // Process data for plotting
-    const plotData = results.map(row => {
-      let xValue = row[xAxis];
-      let yValue = row[yAxis];
-
-      // Convert to numbers if possible
-      if (!isNaN(xValue) && !isNaN(parseFloat(xValue))) {
-        xValue = parseFloat(xValue);
-      }
-      if (!isNaN(yValue) && !isNaN(parseFloat(yValue))) {
-        yValue = parseFloat(yValue);
-      }
-
-      return { x: xValue, y: yValue };
-    }).filter(point => point.x !== '' && point.y !== '' && point.x !== null && point.y !== null);
-
-    // Generate plot configuration based on data types
-    const xColumnInfo = fileMetadata.columnInfo[xAxis];
-    const yColumnInfo = fileMetadata.columnInfo[yAxis];
-
-    let plotConfig = {
-      type: plotType,
-      data: plotData,
-      xAxis: {
-        column: xAxis,
-        type: xColumnInfo.type,
-        label: xAxis
-      },
-      yAxis: {
-        column: yAxis,
-        type: yColumnInfo.type,
-        label: yAxis
-      }
-    };
-
-    // Add specific configurations based on plot type and data types
-    if (plotType === 'bar' && xColumnInfo.type === 'categorical') {
-      // Group data for bar chart
-      const groupedData = {};
-      plotData.forEach(point => {
-        if (!groupedData[point.x]) {
-          groupedData[point.x] = [];
+    // Build query for data filtering
+    let query = { datasetId };
+    if (filters && Object.keys(filters).length > 0) {
+      for (const [key, value] of Object.entries(filters)) {
+        if (value !== null && value !== undefined && value !== '') {
+          query[`data.${key}`] = value;
         }
-        groupedData[point.x].push(point.y);
-      });
-
-      // Calculate aggregated values (mean for numeric, count for categorical)
-      const aggregatedData = Object.keys(groupedData).map(key => ({
-        x: key,
-        y: yColumnInfo.type === 'numeric' 
-          ? groupedData[key].reduce((sum, val) => sum + val, 0) / groupedData[key].length
-          : groupedData[key].length
-      }));
-
-      plotConfig.data = aggregatedData;
-      plotConfig.aggregation = yColumnInfo.type === 'numeric' ? 'mean' : 'count';
+      }
     }
 
-    res.json({
-      message: 'Plot data generated successfully',
-      plotConfig,
-      dataPoints: plotData.length
+    // Fetch data records
+    const dataRecords = await DataRecord.find(query).select('data');
+    const data = dataRecords.map(record => record.data);
+
+    if (data.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'No data found for the specified criteria'
+      });
+    }
+
+    // Process data based on plot type
+    let plotData;
+    switch (plotType) {
+      case 'scatter':
+        if (!yAxis) {
+          return res.status(400).json({
+            success: false,
+            message: 'Y-axis is required for scatter plot'
+          });
+        }
+        plotData = data
+          .filter(row => row[xAxis] !== null && row[yAxis] !== null)
+          .map(row => ({
+            x: row[xAxis],
+            y: row[yAxis]
+          }));
+        break;
+
+      case 'line':
+        if (!yAxis) {
+          return res.status(400).json({
+            success: false,
+            message: 'Y-axis is required for line plot'
+          });
+        }
+        plotData = data
+          .filter(row => row[xAxis] !== null && row[yAxis] !== null)
+          .sort((a, b) => a[xAxis] - b[xAxis])
+          .map(row => ({
+            x: row[xAxis],
+            y: row[yAxis]
+          }));
+        break;
+
+      case 'bar':
+        // Group data by x-axis values and count or sum
+        const groupedData = {};
+        data.forEach(row => {
+          const key = row[xAxis];
+          if (key !== null && key !== undefined) {
+            if (!groupedData[key]) {
+              groupedData[key] = yAxis ? [] : 0;
+            }
+            if (yAxis) {
+              if (row[yAxis] !== null) groupedData[key].push(row[yAxis]);
+            } else {
+              groupedData[key]++;
+            }
+          }
+        });
+
+        plotData = Object.entries(groupedData).map(([key, values]) => ({
+          x: key,
+          y: yAxis ? 
+            (values.length > 0 ? values.reduce((a, b) => a + b, 0) / values.length : 0) :
+            values
+        }));
+        break;
+
+      case 'histogram':
+        const values = data
+          .map(row => row[xAxis])
+          .filter(val => typeof val === 'number' && !isNaN(val));
+        
+        if (values.length === 0) {
+          return res.status(400).json({
+            success: false,
+            message: 'No numeric data found for histogram'
+          });
+        }
+
+        // Create histogram bins
+        const min = Math.min(...values);
+        const max = Math.max(...values);
+        const binCount = Math.min(20, Math.ceil(Math.sqrt(values.length)));
+        const binWidth = (max - min) / binCount;
+        
+        const bins = Array(binCount).fill(0);
+        values.forEach(value => {
+          const binIndex = Math.min(Math.floor((value - min) / binWidth), binCount - 1);
+          bins[binIndex]++;
+        });
+
+        plotData = bins.map((count, index) => ({
+          x: min + (index + 0.5) * binWidth,
+          y: count
+        }));
+        break;
+
+      default:
+        return res.status(400).json({
+          success: false,
+          message: 'Unsupported plot type'
+        });
+    }
+
+    // Save plot configuration
+    const plot = await Plot.create({
+      title: title || `${plotType} plot of ${xAxis}${yAxis ? ` vs ${yAxis}` : ''}`,
+      plotType,
+      datasetId,
+      xAxis,
+      yAxis,
+      filters,
+      createdBy: req.user.id
     });
 
+    res.status(200).json({
+      success: true,
+      message: 'Plot data generated successfully',
+      plot: {
+        id: plot._id,
+        title: plot.title,
+        plotType: plot.plotType,
+        xAxis: plot.xAxis,
+        yAxis: plot.yAxis,
+        createdAt: plot.createdAt
+      },
+      data: plotData,
+      dataCount: data.length
+    });
   } catch (error) {
-    console.error('Plot generation error:', error);
-    res.status(500).json({ error: { message: 'Failed to generate plot data' } });
+    console.error('Generate plot error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while generating plot'
+    });
   }
 });
 
-// Get available plot types based on column types
-router.get('/types/:fileId', authMiddleware, (req, res) => {
+// @desc    Get saved plots
+// @route   GET /api/plots
+// @access  Private
+router.get('/', protect, async (req, res) => {
   try {
-    const { fileId } = req.params;
-    
-    // Get file metadata
-    const metadataPath = path.join(process.env.UPLOAD_DIR || './uploads', 'metadata.json');
-    let allMetadata = [];
-    
-    try {
-      const existingData = fs.readFileSync(metadataPath, 'utf8');
-      allMetadata = JSON.parse(existingData);
-    } catch (error) {
-      return res.status(404).json({ error: { message: 'File metadata not found' } });
-    }
+    const plots = await Plot.find({ createdBy: req.user.id })
+      .populate('datasetId', 'name')
+      .sort({ createdAt: -1 });
 
-    const fileMetadata = allMetadata.find(file => file.id === fileId && file.userId === req.user.userId);
-    
-    if (!fileMetadata) {
-      return res.status(404).json({ error: { message: 'File not found or access denied' } });
-    }
+    res.status(200).json({
+      success: true,
+      count: plots.length,
+      plots: plots.map(plot => ({
+        id: plot._id,
+        title: plot.title,
+        plotType: plot.plotType,
+        xAxis: plot.xAxis,
+        yAxis: plot.yAxis,
+        dataset: plot.datasetId.name,
+        createdAt: plot.createdAt
+      }))
+    });
+  } catch (error) {
+    console.error('Get plots error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
 
-    const numericColumns = fileMetadata.headers.filter(header => 
-      fileMetadata.columnInfo[header].type === 'numeric'
-    );
-    const categoricalColumns = fileMetadata.headers.filter(header => 
-      fileMetadata.columnInfo[header].type === 'categorical'
-    );
-
-    const availableTypes = [
-      {
-        type: 'scatter',
-        name: 'Scatter Plot',
-        description: 'Shows relationship between two numeric variables',
-        requirements: 'Two numeric columns',
-        enabled: numericColumns.length >= 2
-      },
-      {
-        type: 'line',
-        name: 'Line Chart',
-        description: 'Shows trends over time or ordered data',
-        requirements: 'Two numeric columns (x-axis should be ordered)',
-        enabled: numericColumns.length >= 2
-      },
-      {
-        type: 'bar',
-        name: 'Bar Chart',
-        description: 'Compares categories or shows distribution',
-        requirements: 'One categorical and one numeric column',
-        enabled: categoricalColumns.length >= 1 && numericColumns.length >= 1
-      },
-      {
-        type: 'histogram',
-        name: 'Histogram',
-        description: 'Shows distribution of a numeric variable',
-        requirements: 'One numeric column',
-        enabled: numericColumns.length >= 1
-      }
-    ];
-
-    res.json({
-      availableTypes,
-      columnInfo: {
-        numeric: numericColumns,
-        categorical: categoricalColumns,
-        all: fileMetadata.headers
-      }
+// @desc    Delete plot
+// @route   DELETE /api/plots/:id
+// @access  Private
+router.delete('/:id', protect, async (req, res) => {
+  try {
+    const plot = await Plot.findOne({
+      _id: req.params.id,
+      createdBy: req.user.id
     });
 
+    if (!plot) {
+      return res.status(404).json({
+        success: false,
+        message: 'Plot not found'
+      });
+    }
+
+    await Plot.findByIdAndDelete(plot._id);
+
+    res.status(200).json({
+      success: true,
+      message: 'Plot deleted successfully'
+    });
   } catch (error) {
-    console.error('Get plot types error:', error);
-    res.status(500).json({ error: { message: 'Failed to get available plot types' } });
+    console.error('Delete plot error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
   }
 });
 

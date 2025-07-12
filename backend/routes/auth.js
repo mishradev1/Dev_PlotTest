@@ -1,138 +1,148 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const { body, validationResult } = require('express-validator');
-const fs = require('fs').promises;
-const path = require('path');
+const { generateToken, protect } = require('../middleware/auth');
+const User = require('../models/User');
 
 const router = express.Router();
-const USERS_FILE = path.join(__dirname, '../data/users.json');
 
-// Ensure users file exists
-const ensureUsersFile = async () => {
+// @desc    Register user
+// @route   POST /api/auth/register
+// @access  Public
+router.post('/register', async (req, res) => {
   try {
-    await fs.access(USERS_FILE);
-  } catch {
-    await fs.mkdir(path.dirname(USERS_FILE), { recursive: true });
-    await fs.writeFile(USERS_FILE, JSON.stringify([]));
-  }
-};
+    const { username, email, password } = req.body;
 
-// Load users from file
-const loadUsers = async () => {
-  await ensureUsersFile();
-  const data = await fs.readFile(USERS_FILE, 'utf8');
-  return JSON.parse(data);
-};
-
-// Save users to file
-const saveUsers = async (users) => {
-  await fs.writeFile(USERS_FILE, JSON.stringify(users, null, 2));
-};
-
-// Register
-router.post('/register', [
-  body('username').isLength({ min: 3 }).withMessage('Username must be at least 3 characters long'),
-  body('email').isEmail().withMessage('Please provide a valid email'),
-  body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters long')
-], async (req, res) => {
-  try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ error: { message: 'Validation failed', details: errors.array() } });
+    // Validation
+    if (!username || !email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide username, email and password'
+      });
     }
 
-    const { username, email, password } = req.body;
-    const users = await loadUsers();
+    // Check if user exists
+    const userExists = await User.findOne({ 
+      $or: [{ email }, { username }] 
+    });
 
-    // Check if user already exists
-    if (users.find(user => user.email === email || user.username === username)) {
-      return res.status(400).json({ error: { message: 'User already exists with this email or username' } });
+    if (userExists) {
+      return res.status(400).json({
+        success: false,
+        message: 'User already exists with this email or username'
+      });
     }
 
     // Hash password
-    const saltRounds = 12;
-    const hashedPassword = await bcrypt.hash(password, saltRounds);
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
 
-    // Create new user
-    const newUser = {
-      id: Date.now().toString(),
+    // Create user
+    const user = await User.create({
       username,
       email,
-      password: hashedPassword,
-      createdAt: new Date().toISOString()
-    };
+      password: hashedPassword
+    });
 
-    users.push(newUser);
-    await saveUsers(users);
-
-    // Generate JWT
-    const token = jwt.sign(
-      { userId: newUser.id, username: newUser.username },
-      process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRES_IN }
-    );
+    // Generate token
+    const token = generateToken(user._id);
 
     res.status(201).json({
+      success: true,
       message: 'User registered successfully',
       token,
       user: {
-        id: newUser.id,
-        username: newUser.username,
-        email: newUser.email
+        id: user._id,
+        username: user.username,
+        email: user.email
       }
     });
   } catch (error) {
     console.error('Registration error:', error);
-    res.status(500).json({ error: { message: 'Internal server error' } });
+    res.status(500).json({
+      success: false,
+      message: 'Server error during registration'
+    });
   }
 });
 
-// Login
-router.post('/login', [
-  body('email').isEmail().withMessage('Please provide a valid email'),
-  body('password').notEmpty().withMessage('Password is required')
-], async (req, res) => {
+// @desc    Login user
+// @route   POST /api/auth/login
+// @access  Public
+router.post('/login', async (req, res) => {
   try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ error: { message: 'Validation failed', details: errors.array() } });
+    const { email, password } = req.body;
+
+    // Validation
+    if (!email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide email and password'
+      });
     }
 
-    const { email, password } = req.body;
-    const users = await loadUsers();
+    // Check for user
+    const user = await User.findOne({ email }).select('+password');
 
-    // Find user
-    const user = users.find(u => u.email === email);
     if (!user) {
-      return res.status(401).json({ error: { message: 'Invalid credentials' } });
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid credentials'
+      });
     }
 
     // Check password
-    const isValidPassword = await bcrypt.compare(password, user.password);
-    if (!isValidPassword) {
-      return res.status(401).json({ error: { message: 'Invalid credentials' } });
+    const isMatch = await bcrypt.compare(password, user.password);
+
+    if (!isMatch) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid credentials'
+      });
     }
 
-    // Generate JWT
-    const token = jwt.sign(
-      { userId: user.id, username: user.username },
-      process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRES_IN }
-    );
+    // Generate token
+    const token = generateToken(user._id);
 
-    res.json({
+    res.status(200).json({
+      success: true,
       message: 'Login successful',
       token,
       user: {
-        id: user.id,
+        id: user._id,
         username: user.username,
         email: user.email
       }
     });
   } catch (error) {
     console.error('Login error:', error);
-    res.status(500).json({ error: { message: 'Internal server error' } });
+    res.status(500).json({
+      success: false,
+      message: 'Server error during login'
+    });
+  }
+});
+
+// @desc    Get current user
+// @route   GET /api/auth/me
+// @access  Private
+router.get('/me', protect, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    res.status(200).json({
+      success: true,
+      user: {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+        createdAt: user.createdAt
+      }
+    });
+  } catch (error) {
+    console.error('Get user error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
   }
 });
 

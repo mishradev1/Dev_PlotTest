@@ -50,7 +50,7 @@ export default function PlotChart({ plotData }: PlotChartProps) {
         return {
           datasets: [{
             label: `${plot.xAxis} vs ${plot.yAxis}`,
-            data: data.map(point => ({ x: point.x, y: point.y })),
+            data: data.map(point => ({ x: point.x as number, y: point.y as number })),
             backgroundColor: 'rgba(222, 92, 42, 0.6)',
             borderColor: 'rgba(222, 92, 42, 1)',
           }]
@@ -58,10 +58,10 @@ export default function PlotChart({ plotData }: PlotChartProps) {
       
       case 'line':
         return {
-          labels: data.map(point => point.x),
+          labels: data.map(point => String(point.x)),
           datasets: [{
             label: plot.yAxis,
-            data: data.map(point => point.y),
+            data: data.map(point => Number(point.y)),
             borderColor: 'rgba(222, 92, 42, 1)',
             backgroundColor: 'rgba(222, 92, 42, 0.1)',
             fill: true,
@@ -71,10 +71,10 @@ export default function PlotChart({ plotData }: PlotChartProps) {
       case 'bar':
       case 'histogram':
         return {
-          labels: data.map(point => point.x),
+          labels: data.map(point => String(point.x)),
           datasets: [{
             label: plot.yAxis || 'Count',
-            data: data.map(point => point.y),
+            data: data.map(point => Number(point.y)),
             backgroundColor: 'rgba(222, 92, 42, 0.6)',
             borderColor: 'rgba(222, 92, 42, 1)',
             borderWidth: 1,
@@ -131,10 +131,21 @@ export default function PlotChart({ plotData }: PlotChartProps) {
     return baseOptions;
   };
 
+  const getChartType = () => {
+    switch (plot.plotType) {
+      case 'scatter':
+        return 'scatter' as const;
+      case 'line':
+        return 'line' as const;
+      default:
+        return 'bar' as const;
+    }
+  };
+
   return (
     <div className="w-full h-full">
       <Chart
-        type={plot.plotType === 'scatter' ? 'scatter' : plot.plotType === 'line' ? 'line' : 'bar'}
+        type={getChartType()}
         data={getChartData()}
         options={getChartOptions()}
       />

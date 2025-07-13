@@ -34,6 +34,12 @@ interface Dataset {
   createdAt: string;
 }
 
+interface DatasetsResponse {
+  datasets?: Dataset[];
+  data?: Dataset[];
+  success?: boolean;
+}
+
 interface PlotResponse {
   success: boolean;
 }
@@ -127,7 +133,7 @@ class ApiService {
     return response.json();
   }
 
-  async getDatasets(): Promise<{ datasets: Dataset[] }> {
+  async getDatasets(): Promise<DatasetsResponse> {
     const response = await this.makeRequest('/data/datasets');
     return response.json();
   }

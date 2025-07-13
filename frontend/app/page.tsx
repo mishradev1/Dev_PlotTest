@@ -38,14 +38,14 @@ export default function Home() {
     // Check NextAuth session first
     if (session && session.user) {
       const userData = {
-        id: session.user.email,
-        email: session.user.email,
-        username: session.user.name,
-        name: session.user.name
+        id: session.user.email || undefined,
+        email: session.user.email || undefined,
+        username: session.user.name || undefined,
+        name: session.user.name || undefined
       };
       
       // Use the backend JWT token from session if available
-      const backendToken = session.accessToken;
+      const backendToken = (session as any).accessToken;
       if (backendToken) {
         localStorage.setItem('access_token', backendToken);
         localStorage.setItem('token', backendToken);
@@ -78,17 +78,17 @@ export default function Home() {
   const loadRecentUploads = async () => {
     try {
       const response = await apiService.getDatasets();
-      let datasetsArray = [];
+      let datasetsArray: any[] = [];
       
       if (Array.isArray(response)) {
         datasetsArray = response;
-      } else if (response && Array.isArray(response.datasets)) {
+      } else if (response?.datasets && Array.isArray(response.datasets)) {
         datasetsArray = response.datasets;
-      } else if (response && Array.isArray(response.data)) {
+      } else if (response?.data && Array.isArray(response.data)) {
         datasetsArray = response.data;
       }
       
-      const transformedDatasets = datasetsArray.map(dataset => ({
+      const transformedDatasets = datasetsArray.map((dataset: any) => ({
         id: dataset.id || dataset._id,
         name: dataset.name,
         columns: dataset.columns,

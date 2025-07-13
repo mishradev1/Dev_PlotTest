@@ -96,7 +96,7 @@ export default function LoginForm({ onSuccess, onToggleMode }: LoginFormProps) {
             };
             
             // Use the backend JWT token from session
-            const backendToken = session.accessToken;
+            const backendToken = (session as any).accessToken;
             if (backendToken) {
               localStorage.setItem('access_token', backendToken);
               localStorage.setItem('token', backendToken);

@@ -29,34 +29,80 @@ interface PlotData {
   y: number | string;
 }
 
+interface Plot {
+  title: string;
+  plotType: string;
+  xAxis: string;
+  yAxis?: string;
+}
+
 interface PlotChartProps {
   plotData: {
-    plot: {
-      title: string;
-      plotType: string;
-      xAxis: string;
-      yAxis: string;
-    };
+    plot: Plot;
     data: PlotData[];
+  };
+}
+
+interface ChartDataset {
+  label: string;
+  data: Array<{x: number; y: number}> | number[];
+  backgroundColor: string;
+  borderColor: string;
+  borderWidth?: number;
+  fill?: boolean;
+  tension?: number;
+}
+
+interface ChartData {
+  labels?: string[];
+  datasets: ChartDataset[];
+}
+
+interface ChartOptions {
+  responsive: boolean;
+  maintainAspectRatio: boolean;
+  plugins: {
+    legend: {
+      position: 'top';
+    };
+    title: {
+      display: boolean;
+    };
+  };
+  scales: {
+    x: {
+      title: {
+        display: boolean;
+        text: string;
+      };
+      type?: 'linear';
+      position?: 'bottom';
+    };
+    y: {
+      title: {
+        display: boolean;
+        text: string;
+      };
+    };
   };
 }
 
 export default function PlotChart({ plotData }: PlotChartProps) {
   const { plot, data } = plotData;
   
-  const getScatterData = () => ({
+  const getScatterData = (): ChartData => ({
     datasets: [{
-      label: `${plot.xAxis} vs ${plot.yAxis}`,
+      label: `${plot.xAxis} vs ${plot.yAxis || 'Y'}`,
       data: data.map(point => ({ x: Number(point.x), y: Number(point.y) })),
       backgroundColor: 'rgba(222, 92, 42, 0.6)',
       borderColor: 'rgba(222, 92, 42, 1)',
     }]
   });
 
-  const getLineData = () => ({
+  const getLineData = (): ChartData => ({
     labels: data.map(point => String(point.x)),
     datasets: [{
-      label: plot.yAxis,
+      label: plot.yAxis || 'Y',
       data: data.map(point => Number(point.y)),
       borderColor: 'rgba(222, 92, 42, 1)',
       backgroundColor: 'rgba(222, 92, 42, 0.1)',
@@ -65,7 +111,7 @@ export default function PlotChart({ plotData }: PlotChartProps) {
     }]
   });
 
-  const getBarData = () => ({
+  const getBarData = (): ChartData => ({
     labels: data.map(point => String(point.x)),
     datasets: [{
       label: plot.yAxis || 'Count',
@@ -76,8 +122,8 @@ export default function PlotChart({ plotData }: PlotChartProps) {
     }]
   });
 
-  const getChartOptions = () => {
-    const baseOptions = {
+  const getChartOptions = (): ChartOptions => {
+    const baseOptions: ChartOptions = {
       responsive: true,
       maintainAspectRatio: false,
       plugins: {

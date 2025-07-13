@@ -84,13 +84,19 @@ frontend/
 ├── components/            # Reusable components
 │   ├── auth/             # Authentication components
 │   ├── plots/            # Plot generation components
+│   │   ├── PlotGenerator.tsx
+│   │   └── PlotChart.tsx
 │   ├── upload/           # File upload components
 │   └── ui/               # UI primitives
 ├── lib/                  # Utility libraries
-│   ├── api.ts           # API service
+│   ├── api.ts           # API service with typed interfaces
 │   ├── auth.ts          # NextAuth configuration
 │   └── utils.ts         # Utility functions
-└── tailwind.config.js   # Tailwind configuration
+├── types/               # TypeScript type definitions
+│   └── index.ts         # Shared type definitions
+├── next.config.js       # Next.js configuration
+├── tailwind.config.js   # Tailwind configuration
+└── package.json         # Dependencies and scripts
 ```
 
 ## Key Features

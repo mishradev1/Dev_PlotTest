@@ -29,6 +29,35 @@ interface ApiDataset {
   description?: string;
 }
 
+interface PlotDataPoint {
+  x: number | string;
+  y: number | string;
+}
+
+interface PlotlyTrace {
+  x: (number | string)[];
+  y: (number | string)[];
+  type?: string;
+  name?: string;
+}
+
+interface PlotlyData {
+  data: PlotlyTrace[];
+  layout?: Record<string, unknown>;
+}
+
+interface TransformedPlotData {
+  plot: {
+    id: string;
+    plotType: string;
+    xAxis: string;
+    yAxis?: string;
+    title: string;
+    datasetId: string;
+  };
+  data: PlotDataPoint[];
+}
+
 interface PlotGeneratorProps {
   refreshTrigger?: number;
 }
@@ -40,7 +69,7 @@ export default function PlotGenerator({ refreshTrigger }: PlotGeneratorProps) {
   const [xAxis, setXAxis] = useState('');
   const [yAxis, setYAxis] = useState('');
   const [title, setTitle] = useState('');
-  const [plotData, setPlotData] = useState(null);
+  const [plotData, setPlotData] = useState<TransformedPlotData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showModal, setShowModal] = useState(false);
@@ -111,25 +140,37 @@ export default function PlotGenerator({ refreshTrigger }: PlotGeneratorProps) {
       console.log('Plot generation response:', response);
 
       if (response && response.success) {
-        let chartData = [];
+        let chartData: PlotDataPoint[] = [];
         
         if (response.data) {
-          if (response.data.data && Array.isArray(response.data.data)) {
+          // Handle Plotly format with nested data array
+          if ('data' in response.data && Array.isArray(response.data.data)) {
             const plotlyTrace = response.data.data[0];
             if (plotlyTrace && plotlyTrace.x && plotlyTrace.y) {
-              chartData = plotlyTrace.x.map((x, i) => ({
+              chartData = plotlyTrace.x.map((x: number | string, i: number) => ({
                 x: x,
                 y: plotlyTrace.y[i]
               }));
             }
-          } else if (Array.isArray(response.data)) {
-            chartData = response.data;
-          } else {
-            chartData = [];
+          }
+          // Handle array of traces
+          else if (Array.isArray(response.data)) {
+            // Check if it's an array of plot data points
+            if (response.data.length > 0 && 'x' in response.data[0] && 'y' in response.data[0]) {
+              chartData = response.data as PlotDataPoint[];
+            }
+            // Check if it's an array of Plotly traces
+            else if (response.data.length > 0 && 'x' in response.data[0] && Array.isArray(response.data[0].x)) {
+              const trace = response.data[0] as PlotlyTrace;
+              chartData = trace.x.map((x: number | string, i: number) => ({
+                x: x,
+                y: trace.y[i]
+              }));
+            }
           }
         }
 
-        const transformedPlotData = {
+        const transformedPlotData: TransformedPlotData = {
           plot: {
             id: Date.now().toString(),
             plotType: response.plotType || plotType,

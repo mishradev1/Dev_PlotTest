@@ -41,8 +41,26 @@ interface DatasetsResponse {
   success?: boolean;
 }
 
+interface PlotlyTrace {
+  x: (number | string)[];
+  y: (number | string)[];
+  type?: string;
+  name?: string;
+}
+
+interface PlotlyData {
+  data: PlotlyTrace[];
+  layout?: Record<string, unknown>;
+}
+
 interface PlotResponse {
   success: boolean;
+  message?: string;
+  data?: PlotlyData | PlotlyTrace[] | Array<{x: number | string; y: number | string}>;
+  plotType?: string;
+  xAxis?: string;
+  yAxis?: string;
+  title?: string;
 }
 
 interface GoogleAuthData {

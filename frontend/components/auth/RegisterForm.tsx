@@ -63,16 +63,18 @@ export default function RegisterForm({ onSuccess, onToggleMode }: RegisterFormPr
       } else {
         setError(response.message || 'Registration failed');
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Registration error:', err);
       
+      const error = err as Error & { response?: Response };
+      
       // Try to parse error response
-      if (err.response) {
+      if (error.response) {
         try {
-          const errorData = await err.response.json();
+          const errorData = await error.response.json();
           setError(errorData.detail || errorData.message || 'Registration failed');
         } catch {
-          setError(`Registration failed: ${err.response.status}`);
+          setError(`Registration failed: ${error.response.status}`);
         }
       } else {
         setError('Registration failed. Please check your connection and try again.');

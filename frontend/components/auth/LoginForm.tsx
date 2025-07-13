@@ -66,7 +66,7 @@ export default function LoginForm({ onSuccess, onToggleMode }: LoginFormProps) {
       } else {
         setError(response.message || 'Login failed');
       }
-    } catch (err) {
+    } catch {
       setError('Login failed. Please try again.');
     } finally {
       setLoading(false);
@@ -109,7 +109,7 @@ export default function LoginForm({ onSuccess, onToggleMode }: LoginFormProps) {
       } else if (result?.error) {
         setError('Google sign-in failed. Please try again.');
       }
-    } catch (err) {
+    } catch {
       setError('Google sign-in failed. Please try again.');
     } finally {
       setGoogleLoading(false);
@@ -217,7 +217,7 @@ export default function LoginForm({ onSuccess, onToggleMode }: LoginFormProps) {
 
             <div className="text-center pt-2">
               <span className="text-sm text-warm-gray-600">
-                Don't have an account?{' '}
+                Don&apos;t have an account?{' '}
                 <button
                   type="button"
                   onClick={onToggleMode}

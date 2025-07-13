@@ -19,6 +19,16 @@ interface Dataset {
   description?: string;
 }
 
+interface ApiDataset {
+  id?: string;
+  _id?: string;
+  name: string;
+  columns: string[];
+  row_count: number;
+  created_at: string;
+  description?: string;
+}
+
 interface PlotGeneratorProps {
   refreshTrigger?: number;
 }
@@ -44,7 +54,7 @@ export default function PlotGenerator({ refreshTrigger }: PlotGeneratorProps) {
       const response = await apiService.getDatasets();
       console.log('API Response:', response);
       
-      let datasetsArray: Dataset[] = [];
+      let datasetsArray: ApiDataset[] = [];
       
       if (Array.isArray(response)) {
         datasetsArray = response;
@@ -57,8 +67,8 @@ export default function PlotGenerator({ refreshTrigger }: PlotGeneratorProps) {
         datasetsArray = [];
       }
       
-      const transformedDatasets = datasetsArray.map((dataset: Dataset) => ({
-        id: dataset.id || dataset._id,
+      const transformedDatasets: Dataset[] = datasetsArray.map((dataset: ApiDataset) => ({
+        id: dataset.id || dataset._id || '',
         name: dataset.name,
         columns: dataset.columns,
         row_count: dataset.row_count,

@@ -133,7 +133,7 @@ class ApiService {
     return response.json();
   }
 
-  async getDatasets(): Promise<DatasetsResponse> {
+  async getDatasets(): Promise<DatasetsResponse | Dataset[]> {
     const response = await this.makeRequest('/data/datasets');
     return response.json();
   }

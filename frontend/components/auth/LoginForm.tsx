@@ -12,6 +12,14 @@ interface LoginFormProps {
   onToggleMode: () => void;
 }
 
+interface SessionWithToken {
+  accessToken?: string;
+  user?: {
+    email?: string | null;
+    name?: string | null;
+  };
+}
+
 export default function LoginForm({ onSuccess, onToggleMode }: LoginFormProps) {
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [loading, setLoading] = useState(false);
@@ -96,7 +104,7 @@ export default function LoginForm({ onSuccess, onToggleMode }: LoginFormProps) {
             };
             
             // Use the backend JWT token from session
-            const backendToken = (session as any).accessToken;
+            const backendToken = (session as SessionWithToken).accessToken;
             if (backendToken) {
               localStorage.setItem('access_token', backendToken);
               localStorage.setItem('token', backendToken);

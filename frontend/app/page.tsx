@@ -20,6 +20,19 @@ interface Dataset {
   description?: string;
 }
 
+interface SessionWithToken {
+  accessToken?: string;
+  user?: {
+    email?: string | null;
+    name?: string | null;
+  };
+}
+
+interface DatasetResponse {
+  datasets?: Dataset[];
+  data?: Dataset[];
+}
+
 export default function Home() {
   const { data: session } = useSession();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -45,7 +58,7 @@ export default function Home() {
       };
       
       // Use the backend JWT token from session if available
-      const backendToken = (session as any).accessToken;
+      const backendToken = (session as SessionWithToken).accessToken;
       if (backendToken) {
         localStorage.setItem('access_token', backendToken);
         localStorage.setItem('token', backendToken);
@@ -77,8 +90,8 @@ export default function Home() {
 
   const loadRecentUploads = async () => {
     try {
-      const response = await apiService.getDatasets();
-      let datasetsArray: any[] = [];
+      const response: DatasetResponse = await apiService.getDatasets();
+      let datasetsArray: Dataset[] = [];
       
       if (Array.isArray(response)) {
         datasetsArray = response;
@@ -88,8 +101,8 @@ export default function Home() {
         datasetsArray = response.data;
       }
       
-      const transformedDatasets = datasetsArray.map((dataset: any) => ({
-        id: dataset.id || dataset._id,
+      const transformedDatasets = datasetsArray.map((dataset: Dataset) => ({
+        id: dataset.id,
         name: dataset.name,
         columns: dataset.columns,
         row_count: dataset.row_count,

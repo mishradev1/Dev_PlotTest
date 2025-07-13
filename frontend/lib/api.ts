@@ -1,4 +1,4 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
 
 interface LoginData {
   email: string;
@@ -9,6 +9,21 @@ interface RegisterData {
   username: string;
   email: string;
   password: string;
+  full_name: string;
+}
+
+interface AuthResponse {
+  success: boolean;
+  message: string;
+  user: {
+    id: string;
+    email: string;
+    username: string;
+    full_name: string;
+    is_active: boolean;
+  };
+  token: string;
+  token_type: string;
 }
 
 interface Dataset {
@@ -46,22 +61,40 @@ class ApiService {
     };
   }
 
-  async login(data: LoginData) {
+  async login(data: LoginData): Promise<AuthResponse> {
     const response = await fetch(`${API_BASE_URL}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
     });
+    
+    if (!response.ok) {
+      throw new Error('Network error');
+    }
+    
     return response.json();
   }
 
-  async register(data: RegisterData) {
-    const response = await fetch(`${API_BASE_URL}/auth/register`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    });
-    return response.json();
+  async register(data: RegisterData): Promise<AuthResponse> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      
+      const result = await response.json();
+      
+      if (!response.ok) {
+        console.error('Registration failed:', result);
+        throw new Error(result.detail || result.message || 'Registration failed');
+      }
+      
+      return result;
+    } catch (error) {
+      console.error('API Error:', error);
+      throw error;
+    }
   }
 
   async uploadCSV(file: File, datasetName: string, description?: string) {

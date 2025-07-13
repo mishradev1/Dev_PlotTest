@@ -1,7 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { apiService } from '@/lib/api';
+import { Upload, FileText } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 
 interface CSVUploadProps {
   onUploadSuccess: () => void;
@@ -33,73 +36,97 @@ export default function CSVUpload({ onUploadSuccess }: CSVUploadProps) {
     setError('');
 
     try {
-      const response = await apiService.uploadCSV(file, datasetName, description);
-      if (response.success) {
-        setFile(null);
-        setDatasetName('');
-        setDescription('');
-        onUploadSuccess();
-      } else {
-        setError(response.message);
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('name', datasetName);
+      formData.append('description', description);
+
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'}/data/upload`, {
+        method: 'POST',
+        headers: {
+          ...(token && { Authorization: `Bearer ${token}` })
+        },
+        body: formData
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Upload failed');
       }
-    } catch (err) {
-      setError('Upload failed. Please try again.');
+
+      const result = await response.json();
+      
+      setFile(null);
+      setDatasetName('');
+      setDescription('');
+      onUploadSuccess();
+    } catch (err: any) {
+      console.error('Upload error:', err);
+      setError(err.message || 'Upload failed. Please try again.');
     } finally {
       setUploading(false);
     }
   };
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow">
-      <h2 className="text-xl font-semibold mb-4">Upload CSV Dataset</h2>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Select CSV File
-          </label>
-          <input
-            type="file"
-            accept=".csv"
-            onChange={handleFileChange}
-            className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
-          />
-        </div>
-        
-        {file && (
-          <>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Dataset Name</label>
-              <input
-                type="text"
-                required
-                value={datasetName}
-                onChange={(e) => setDatasetName(e.target.value)}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-              />
+    <Card className="w-full">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Upload className="h-5 w-5" />
+          Upload Dataset
+        </CardTitle>
+        <CardDescription>
+          Upload a CSV file to create visualizations
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <label className="text-sm font-medium">CSV File</label>
+            <Input
+              type="file"
+              accept=".csv"
+              onChange={handleFileChange}
+              className="cursor-pointer"
+            />
+          </div>
+          
+          {file && (
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 p-3 bg-muted rounded-md">
+                <FileText className="h-4 w-4" />
+                <span className="text-sm">{file.name}</span>
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Dataset Name</label>
+                <Input
+                  required
+                  value={datasetName}
+                  onChange={(e) => setDatasetName(e.target.value)}
+                  placeholder="Enter dataset name"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Description (Optional)</label>
+                <Input
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Enter description"
+                />
+              </div>
+              
+              {error && <p className="text-destructive text-sm">{error}</p>}
+              
+              <Button type="submit" disabled={uploading} className="w-full">
+                {uploading ? 'Uploading...' : 'Upload Dataset'}
+              </Button>
             </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Description (Optional)</label>
-              <textarea
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                rows={3}
-              />
-            </div>
-            
-            {error && <p className="text-red-600 text-sm">{error}</p>}
-            
-            <button
-              type="submit"
-              disabled={uploading}
-              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
-            >
-              {uploading ? 'Uploading...' : 'Upload Dataset'}
-            </button>
-          </>
-        )}
-      </form>
-    </div>
+          )}
+        </form>
+      </CardContent>
+    </Card>
   );
 }

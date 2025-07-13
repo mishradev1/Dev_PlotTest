@@ -2,6 +2,10 @@
 
 import { useState } from 'react';
 import { apiService } from '@/lib/api';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { LogIn, BarChart3 } from 'lucide-react';
 
 interface LoginFormProps {
   onSuccess: () => void;
@@ -25,7 +29,7 @@ export default function LoginForm({ onSuccess, onToggleMode }: LoginFormProps) {
         localStorage.setItem('user', JSON.stringify(response.user));
         onSuccess();
       } else {
-        setError(response.message);
+        setError(response.message || 'Login failed');
       }
     } catch (err) {
       setError('Login failed. Please try again.');
@@ -35,45 +39,57 @@ export default function LoginForm({ onSuccess, onToggleMode }: LoginFormProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Email</label>
-        <input
-          type="email"
-          required
-          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-          value={formData.email}
-          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-        />
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Password</label>
-        <input
-          type="password"
-          required
-          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-          value={formData.password}
-          onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-        />
-      </div>
-      {error && <p className="text-red-600 text-sm">{error}</p>}
-      <button
-        type="submit"
-        disabled={loading}
-        className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
-      >
-        {loading ? 'Signing in...' : 'Sign in'}
-      </button>
-      <p className="text-center text-sm text-gray-600">
-        Don't have an account?{' '}
-        <button
-          type="button"
-          onClick={onToggleMode}
-          className="font-medium text-indigo-600 hover:text-indigo-500"
-        >
-          Sign up
-        </button>
-      </p>
-    </form>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader className="text-center">
+          <CardTitle className="flex items-center justify-center gap-2 text-2xl">
+            <BarChart3 className="h-6 w-6" />
+            DataViz
+          </CardTitle>
+          <CardDescription>
+            Sign in to create beautiful visualizations
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Email</label>
+              <Input
+                type="email"
+                required
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                placeholder="Enter your email"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Password</label>
+              <Input
+                type="password"
+                required
+                value={formData.password}
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                placeholder="Enter your password"
+              />
+            </div>
+            {error && <p className="text-destructive text-sm">{error}</p>}
+            <Button type="submit" disabled={loading} className="w-full">
+              <LogIn className="h-4 w-4 mr-2" />
+              {loading ? 'Signing in...' : 'Sign in'}
+            </Button>
+            <p className="text-center text-sm text-muted-foreground">
+              Don't have an account?{' '}
+              <button
+                type="button"
+                onClick={onToggleMode}
+                className="font-medium text-primary hover:underline"
+              >
+                Sign up
+              </button>
+            </p>
+          </form>
+        </CardContent>
+      </Card>
+    </div>
   );
 }

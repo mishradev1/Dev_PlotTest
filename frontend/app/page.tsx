@@ -1,22 +1,37 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Image from "next/image";
-import LoginForm from '@/components/auth/LoginForm';
+import { LogOut, BarChart3 } from 'lucide-react';
 import CSVUpload from '@/components/upload/CSVUpload';
 import PlotGenerator from '@/components/plots/PlotGenerator';
+import LoginForm from '@/components/auth/LoginForm';
+import RegisterForm from '@/components/auth/RegisterForm';
+import { Button } from '@/components/ui/button';
 
 export default function Home() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [showRegister, setShowRegister] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
   const [refreshData, setRefreshData] = useState(0);
+  const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
+    // Check if user is already authenticated
     const token = localStorage.getItem('token');
-    setIsAuthenticated(!!token);
+    const userData = localStorage.getItem('user');
+    
+    if (token && userData) {
+      setIsAuthenticated(true);
+      setUser(JSON.parse(userData));
+    }
+    setIsLoading(false);
   }, []);
 
-  const handleLoginSuccess = () => {
+  const handleAuthSuccess = () => {
+    const userData = localStorage.getItem('user');
+    if (userData) {
+      setUser(JSON.parse(userData));
+    }
     setIsAuthenticated(true);
   };
 
@@ -24,53 +39,56 @@ export default function Home() {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     setIsAuthenticated(false);
+    setUser(null);
   };
 
   const handleUploadSuccess = () => {
     setRefreshData(prev => prev + 1);
   };
 
-  if (!isAuthenticated) {
+  const toggleAuthMode = () => {
+    setAuthMode(authMode === 'login' ? 'register' : 'login');
+  };
+
+  if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-        <div className="sm:mx-auto sm:w-full sm:max-w-md">
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Data Visualization App
-          </h2>
-        </div>
-        <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-          <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-            <LoginForm
-              onSuccess={handleLoginSuccess}
-              onToggleMode={() => setShowRegister(!showRegister)}
-            />
-          </div>
-        </div>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     );
   }
 
+  if (!isAuthenticated) {
+    return authMode === 'login' ? (
+      <LoginForm onSuccess={handleAuthSuccess} onToggleMode={toggleAuthMode} />
+    ) : (
+      <RegisterForm onSuccess={handleAuthSuccess} onToggleMode={toggleAuthMode} />
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white shadow">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+      <nav className="bg-white border-b shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex items-center">
-              <h1 className="text-xl font-semibold">Data Visualization App</h1>
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center gap-2">
+              <BarChart3 className="h-6 w-6 text-primary" />
+              <h1 className="text-xl font-semibold">DataViz</h1>
             </div>
-            <div className="flex items-center">
-              <button
-                onClick={handleLogout}
-                className="text-gray-500 hover:text-gray-700 px-3 py-2 rounded-md text-sm font-medium"
-              >
-                Logout
-              </button>
+            <div className="flex items-center gap-4">
+              <span className="text-sm text-muted-foreground">
+                Welcome, {user?.username || user?.name}
+              </span>
+              <Button variant="ghost" size="sm" onClick={handleLogout}>
+                <LogOut className="h-4 w-4 mr-2" />
+                Sign out
+              </Button>
             </div>
           </div>
         </div>
       </nav>
 
-      <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+      <main className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
         <div className="space-y-8">
           <CSVUpload onUploadSuccess={handleUploadSuccess} />
           <PlotGenerator key={refreshData} />

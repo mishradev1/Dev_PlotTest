@@ -44,7 +44,7 @@ export default function PlotGenerator({ refreshTrigger }: PlotGeneratorProps) {
       const response = await apiService.getDatasets();
       console.log('API Response:', response);
       
-      let datasetsArray = [];
+      let datasetsArray: Dataset[] = [];
       
       if (Array.isArray(response)) {
         datasetsArray = response;
@@ -57,7 +57,7 @@ export default function PlotGenerator({ refreshTrigger }: PlotGeneratorProps) {
         datasetsArray = [];
       }
       
-      const transformedDatasets = datasetsArray.map(dataset => ({
+      const transformedDatasets = datasetsArray.map((dataset: Dataset) => ({
         id: dataset.id || dataset._id,
         name: dataset.name,
         columns: dataset.columns,

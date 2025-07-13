@@ -34,11 +34,6 @@ interface Dataset {
   createdAt: string;
 }
 
-interface PlotData {
-  x: number | string;
-  y: number | string;
-}
-
 interface PlotResponse {
   success: boolean;
 }
@@ -108,9 +103,10 @@ class ApiService {
       }
       
       return result;
-    } catch (error) {
-      console.error('API Error:', error);
-      throw error;
+    } catch (error: unknown) {
+      const err = error as Error;
+      console.error('API Error:', err);
+      throw err;
     }
   }
 

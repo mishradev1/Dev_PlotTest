@@ -4,7 +4,6 @@ import { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Upload, FileText, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 
 interface CSVUploadProps {
@@ -69,15 +68,16 @@ export default function CSVUpload({ onUploadSuccess }: CSVUploadProps) {
         throw new Error(errorData.detail || 'Upload failed');
       }
 
-      const result = await response.json();
+      await response.json();
       
       setFile(null);
       setDatasetName('');
       setDescription('');
       onUploadSuccess();
-    } catch (err: any) {
-      console.error('Upload error:', err);
-      setError(err.message || 'Upload failed. Please try again.');
+    } catch (err: unknown) {
+      const error = err as Error;
+      console.error('Upload error:', error);
+      setError(error.message || 'Upload failed. Please try again.');
     } finally {
       setUploading(false);
     }

@@ -1,7 +1,8 @@
 {
-  "name": "frontend",
+  "name": "plotcsv-frontend",
   "version": "0.1.0",
   "private": true,
+  "description": "PlotCSV Frontend - Data Visualization Application",
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",

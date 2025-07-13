@@ -11,7 +11,7 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
-import { Chart } from 'react-chartjs-2';
+import { Scatter, Line, Bar } from 'react-chartjs-2';
 
 ChartJS.register(
   CategoryScale,
@@ -44,51 +44,37 @@ interface PlotChartProps {
 export default function PlotChart({ plotData }: PlotChartProps) {
   const { plot, data } = plotData;
   
-  const getChartData = () => {
-    switch (plot.plotType) {
-      case 'scatter':
-        return {
-          datasets: [{
-            label: `${plot.xAxis} vs ${plot.yAxis}`,
-            data: data.map(point => ({ x: Number(point.x), y: Number(point.y) })),
-            backgroundColor: 'rgba(222, 92, 42, 0.6)',
-            borderColor: 'rgba(222, 92, 42, 1)',
-          }]
-        };
-      
-      case 'line':
-        return {
-          labels: data.map(point => String(point.x)),
-          datasets: [{
-            label: plot.yAxis,
-            data: data.map(point => Number(point.y)),
-            borderColor: 'rgba(222, 92, 42, 1)',
-            backgroundColor: 'rgba(222, 92, 42, 0.1)',
-            fill: true,
-            tension: 0.1,
-          }]
-        };
-      
-      case 'bar':
-      case 'histogram':
-        return {
-          labels: data.map(point => String(point.x)),
-          datasets: [{
-            label: plot.yAxis || 'Count',
-            data: data.map(point => Number(point.y)),
-            backgroundColor: 'rgba(222, 92, 42, 0.6)',
-            borderColor: 'rgba(222, 92, 42, 1)',
-            borderWidth: 1,
-          }]
-        };
-      
-      default:
-        return { 
-          labels: [],
-          datasets: [] 
-        };
-    }
-  };
+  const getScatterData = () => ({
+    datasets: [{
+      label: `${plot.xAxis} vs ${plot.yAxis}`,
+      data: data.map(point => ({ x: Number(point.x), y: Number(point.y) })),
+      backgroundColor: 'rgba(222, 92, 42, 0.6)',
+      borderColor: 'rgba(222, 92, 42, 1)',
+    }]
+  });
+
+  const getLineData = () => ({
+    labels: data.map(point => String(point.x)),
+    datasets: [{
+      label: plot.yAxis,
+      data: data.map(point => Number(point.y)),
+      borderColor: 'rgba(222, 92, 42, 1)',
+      backgroundColor: 'rgba(222, 92, 42, 0.1)',
+      fill: true,
+      tension: 0.1,
+    }]
+  });
+
+  const getBarData = () => ({
+    labels: data.map(point => String(point.x)),
+    datasets: [{
+      label: plot.yAxis || 'Count',
+      data: data.map(point => Number(point.y)),
+      backgroundColor: 'rgba(222, 92, 42, 0.6)',
+      borderColor: 'rgba(222, 92, 42, 1)',
+      borderWidth: 1,
+    }]
+  });
 
   const getChartOptions = () => {
     const baseOptions = {
@@ -135,24 +121,39 @@ export default function PlotChart({ plotData }: PlotChartProps) {
     return baseOptions;
   };
 
-  const getChartType = (): 'scatter' | 'line' | 'bar' => {
+  const renderChart = () => {
     switch (plot.plotType) {
       case 'scatter':
-        return 'scatter';
+        return (
+          <Scatter
+            data={getScatterData()}
+            options={getChartOptions()}
+          />
+        );
+      
       case 'line':
-        return 'line';
+        return (
+          <Line
+            data={getLineData()}
+            options={getChartOptions()}
+          />
+        );
+      
+      case 'bar':
+      case 'histogram':
       default:
-        return 'bar';
+        return (
+          <Bar
+            data={getBarData()}
+            options={getChartOptions()}
+          />
+        );
     }
   };
 
   return (
     <div className="w-full h-full">
-      <Chart
-        type={getChartType()}
-        data={getChartData()}
-        options={getChartOptions()}
-      />
+      {renderChart()}
     </div>
   );
 }

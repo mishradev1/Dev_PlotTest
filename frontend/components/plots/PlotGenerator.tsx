@@ -41,11 +41,6 @@ interface PlotlyTrace {
   name?: string;
 }
 
-interface PlotlyData {
-  data: PlotlyTrace[];
-  layout?: Record<string, unknown>;
-}
-
 interface TransformedPlotData {
   plot: {
     id: string;

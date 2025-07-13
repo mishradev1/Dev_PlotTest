@@ -50,7 +50,7 @@ export default function PlotChart({ plotData }: PlotChartProps) {
         return {
           datasets: [{
             label: `${plot.xAxis} vs ${plot.yAxis}`,
-            data: data.map(point => ({ x: point.x as number, y: point.y as number })),
+            data: data.map(point => ({ x: Number(point.x), y: Number(point.y) })),
             backgroundColor: 'rgba(222, 92, 42, 0.6)',
             borderColor: 'rgba(222, 92, 42, 1)',
           }]
@@ -65,6 +65,7 @@ export default function PlotChart({ plotData }: PlotChartProps) {
             borderColor: 'rgba(222, 92, 42, 1)',
             backgroundColor: 'rgba(222, 92, 42, 0.1)',
             fill: true,
+            tension: 0.1,
           }]
         };
       
@@ -82,7 +83,10 @@ export default function PlotChart({ plotData }: PlotChartProps) {
         };
       
       default:
-        return { datasets: [] };
+        return { 
+          labels: [],
+          datasets: [] 
+        };
     }
   };
 
@@ -95,7 +99,7 @@ export default function PlotChart({ plotData }: PlotChartProps) {
           position: 'top' as const,
         },
         title: {
-          display: false, // Hide chart title since it's in modal header
+          display: false,
         },
       },
       scales: {
@@ -131,14 +135,14 @@ export default function PlotChart({ plotData }: PlotChartProps) {
     return baseOptions;
   };
 
-  const getChartType = () => {
+  const getChartType = (): 'scatter' | 'line' | 'bar' => {
     switch (plot.plotType) {
       case 'scatter':
-        return 'scatter' as const;
+        return 'scatter';
       case 'line':
-        return 'line' as const;
+        return 'line';
       default:
-        return 'bar' as const;
+        return 'bar';
     }
   };
 

@@ -57,6 +57,31 @@ module.exports = {
   				'3': 'hsl(var(--chart-3))',
   				'4': 'hsl(var(--chart-4))',
   				'5': 'hsl(var(--chart-5))'
+  			},
+  			// Claude-inspired orange theme
+  			'claude-orange': {
+  				50: '#fef5f0',
+  				100: '#fde8d9',
+  				200: '#faceb3',
+  				300: '#f7ab82',
+  				400: '#f4804f',
+  				500: '#de5c2a',
+  				600: '#cc4a1f',
+  				700: '#a8391b',
+  				800: '#8a2f1c',
+  				900: '#73291a',
+  			},
+  			'warm-gray': {
+  				50: '#fafaf9',
+  				100: '#f5f5f4',
+  				200: '#e7e5e4',
+  				300: '#d6d3d1',
+  				400: '#a8a29e',
+  				500: '#78716c',
+  				600: '#57534e',
+  				700: '#44403c',
+  				800: '#292524',
+  				900: '#1c1917',
   			}
   		},
   		borderRadius: {
@@ -79,6 +104,14 @@ module.exports = {
   				},
   				to: {
   					height: '0'
+  				}
+  			},
+  			'strike-through': {
+  				'0%': {
+  					transform: 'scaleX(0)'
+  				},
+  				'100%': {
+  					transform: 'scaleX(1)'
   				}
   			}
   		},

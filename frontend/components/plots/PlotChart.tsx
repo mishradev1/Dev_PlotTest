@@ -52,8 +52,8 @@ export default function PlotChart({ plotData }: PlotChartProps) {
           datasets: [{
             label: `${plot.xAxis} vs ${plot.yAxis}`,
             data: data.map(point => ({ x: point.x, y: point.y })),
-            backgroundColor: 'rgba(59, 130, 246, 0.6)',
-            borderColor: 'rgba(59, 130, 246, 1)',
+            backgroundColor: 'rgba(222, 92, 42, 0.6)',
+            borderColor: 'rgba(222, 92, 42, 1)',
           }]
         };
       
@@ -63,8 +63,8 @@ export default function PlotChart({ plotData }: PlotChartProps) {
           datasets: [{
             label: plot.yAxis,
             data: data.map(point => point.y),
-            borderColor: 'rgba(59, 130, 246, 1)',
-            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+            borderColor: 'rgba(222, 92, 42, 1)',
+            backgroundColor: 'rgba(222, 92, 42, 0.1)',
             fill: true,
           }]
         };
@@ -76,8 +76,8 @@ export default function PlotChart({ plotData }: PlotChartProps) {
           datasets: [{
             label: plot.yAxis || 'Count',
             data: data.map(point => point.y),
-            backgroundColor: 'rgba(59, 130, 246, 0.6)',
-            borderColor: 'rgba(59, 130, 246, 1)',
+            backgroundColor: 'rgba(222, 92, 42, 0.6)',
+            borderColor: 'rgba(222, 92, 42, 1)',
             borderWidth: 1,
           }]
         };
@@ -90,13 +90,13 @@ export default function PlotChart({ plotData }: PlotChartProps) {
   const getChartOptions = () => {
     const baseOptions = {
       responsive: true,
+      maintainAspectRatio: false,
       plugins: {
         legend: {
           position: 'top' as const,
         },
         title: {
-          display: true,
-          text: plot.title,
+          display: false, // Hide chart title since it's in modal header
         },
       },
       scales: {
@@ -133,7 +133,7 @@ export default function PlotChart({ plotData }: PlotChartProps) {
   };
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow">
+    <div className="w-full h-full">
       <Chart
         type={plot.plotType === 'scatter' ? 'scatter' : plot.plotType === 'line' ? 'line' : 'bar'}
         data={getChartData()}

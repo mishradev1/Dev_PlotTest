@@ -1,36 +1,128 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# PlotCSV Frontend
+
+A modern Next.js frontend for the PlotCSV data visualization application with Claude-inspired design.
+
+## Features
+
+- **Authentication**: Google OAuth and email/password login with NextAuth.js
+- **File Upload**: Drag & drop CSV file upload with validation
+- **Data Visualization**: Interactive charts and plots generation
+- **Responsive Design**: Mobile-first design with Tailwind CSS
+- **Real-time Updates**: Live data refresh and plot generation
+- **Modern UI**: Claude-inspired design with smooth animations
+
+## Tech Stack
+
+- **Framework**: Next.js 14 with App Router
+- **Styling**: Tailwind CSS with custom color palette
+- **Authentication**: NextAuth.js with Google Provider
+- **UI Components**: Radix UI primitives with shadcn/ui
+- **Icons**: Lucide React
+- **TypeScript**: Full type safety
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- Node.js 18+
+- npm, yarn, pnpm, or bun
+
+### Installation
+
+1. **Navigate to the frontend directory:**
+   ```bash
+   cd frontend
+   ```
+
+2. **Install dependencies:**
+   ```bash
+   npm install
+   # or
+   yarn install
+   # or
+   pnpm install
+   ```
+
+3. **Set up environment variables:**
+   Copy `.env.example` to `.env.local` and update:
+   ```bash
+   cp .env.example .env.local
+   ```
+   
+   Required environment variables:
+   ```env
+   NEXTAUTH_SECRET=your-secret-key
+   NEXTAUTH_URL=http://localhost:3000
+   GOOGLE_CLIENT_ID=your-google-client-id
+   GOOGLE_CLIENT_SECRET=your-google-client-secret
+   NEXT_PUBLIC_API_URL=http://localhost:8000/api
+   ```
+
+4. **Run the development server:**
+   ```bash
+   npm run dev
+   # or
+   yarn dev
+   # or
+   pnpm dev
+   # or
+   bun dev
+   ```
+
+5. **Open the application:**
+   Navigate to [http://localhost:3000](http://localhost:3000)
+
+## Project Structure
+
+```
+frontend/
+├── app/                    # Next.js app directory
+│   ├── layout.tsx         # Root layout
+│   ├── page.tsx           # Dashboard page
+│   ├── providers.tsx      # Context providers
+│   └── globals.css        # Global styles
+├── components/            # Reusable components
+│   ├── auth/             # Authentication components
+│   ├── plots/            # Plot generation components
+│   ├── upload/           # File upload components
+│   └── ui/               # UI primitives
+├── lib/                  # Utility libraries
+│   ├── api.ts           # API service
+│   ├── auth.ts          # NextAuth configuration
+│   └── utils.ts         # Utility functions
+└── tailwind.config.js   # Tailwind configuration
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Key Features
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Authentication
+- **Split-screen login**: Claude-inspired design with left branding panel
+- **Google OAuth**: One-click Google sign-in
+- **Email/Password**: Traditional authentication
+- **Animated typing effect**: Dynamic text animation on login screen
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Dashboard
+- **Three-panel layout**: Upload, Recent files, Plot generation
+- **CSV Upload**: Drag & drop with file validation
+- **Recent uploads**: Quick access to uploaded datasets
+- **Plot generator**: Create visualizations from uploaded data
+
+### Design System
+- **Color palette**: Claude-inspired orange and warm gray theme
+- **Typography**: Geist font family for modern aesthetics
+- **Animations**: Smooth transitions and micro-interactions
+- **Responsive**: Mobile-first responsive design
+
+## Available Scripts
+
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run start` - Start production server
+- `npm run lint` - Run ESLint
 
 ## Learn More
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- [Next.js Documentation](https://nextjs.org/docs)
+- [Tailwind CSS](https://tailwindcss.com/docs)
+- [NextAuth.js](https://next-auth.js.org/)
+- [shadcn/ui](https://ui.shadcn.com/)

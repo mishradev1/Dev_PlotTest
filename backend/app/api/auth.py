@@ -17,6 +17,11 @@ class LoginRequest(BaseModel):
     email: str
     password: str
 
+class GoogleAuthRequest(BaseModel):
+    email: str
+    name: str
+    google_id: str
+
 class RegisterResponse(BaseModel):
     success: bool
     message: str
@@ -123,3 +128,48 @@ async def login_form(form_data: OAuth2PasswordRequestForm = Depends(), db = Depe
     )
     
     return {"access_token": access_token, "token_type": "bearer"}
+
+@router.post("/google", response_model=LoginResponse)
+async def google_auth(google_data: GoogleAuthRequest, db = Depends(get_database)):
+    """Handle Google OAuth authentication"""
+    logger.info(f"Google auth attempt for email: {google_data.email}")
+    user_service = UserService(db)
+    
+    try:
+        # Check if user exists
+        existing_user = await user_service.get_user_by_email(google_data.email)
+        
+        if existing_user:
+            # User exists, log them in
+            user = existing_user
+            logger.info(f"Existing Google user logged in: {user.email}")
+        else:
+            # Create new user
+            user_create = UserCreate(
+                email=google_data.email,
+                username=google_data.email.split('@')[0],  # Use email prefix as username
+                full_name=google_data.name,
+                password="google_oauth_user"  # Placeholder password for Google users
+            )
+            user = await user_service.create_user(user_create)
+            logger.info(f"New Google user created: {user.email}")
+        
+        # Create access token
+        access_token_expires = timedelta(minutes=settings.jwt_access_token_expire_minutes)
+        access_token = create_access_token(
+            data={"sub": user.email}, expires_delta=access_token_expires
+        )
+        
+        return LoginResponse(
+            success=True,
+            message="Google authentication successful",
+            user=user,
+            token=access_token,
+            token_type="bearer"
+        )
+    except Exception as e:
+        logger.error(f"Google auth error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Google authentication failed"
+        )

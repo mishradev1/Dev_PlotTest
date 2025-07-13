@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "DataViz - Data Visualization App",
+  title: "PlotCSV - Data Visualization App",
   description: "Upload CSV files and create beautiful interactive visualizations",
 };
 
@@ -31,3 +31,4 @@ export default function RootLayout({
     </html>
   );
 }
+

@@ -14,14 +14,15 @@ router = APIRouter()
 
 @router.post("/upload", response_model=Dataset)
 async def upload_dataset(
-    file: UploadFile = File(...),
     name: str = Form(...),
     description: str = Form(""),
+    file: UploadFile = File(...),
     current_user: User = Depends(get_current_active_user),
     db = Depends(get_database)
 ):
     """Upload a CSV dataset"""
     logger.info(f"Upload attempt by user {current_user.email}, file: {file.filename}")
+    logger.info(f"Form data - name: {name}, description: {description}")
     
     if not file.filename:
         raise HTTPException(
@@ -205,4 +206,15 @@ async def debug_all_datasets(
         "current_user_email": current_user.email,
         "all_datasets": all_datasets,
         "total_datasets": len(all_datasets)
+    }
+
+@router.post("/test-auth")
+async def test_auth(
+    current_user: User = Depends(get_current_active_user)
+):
+    """Test authentication endpoint"""
+    return {
+        "message": "Authentication successful",
+        "user_id": str(current_user.id),
+        "user_email": current_user.email
     }

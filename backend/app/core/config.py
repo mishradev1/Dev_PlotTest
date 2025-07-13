@@ -15,6 +15,9 @@ class Settings(BaseSettings):
     jwt_algorithm: str = os.getenv("JWT_ALGORITHM", "HS256")
     jwt_access_token_expire_minutes: int = int(os.getenv("JWT_ACCESS_TOKEN_EXPIRE_MINUTES", "30"))
     
+    # Google OAuth
+    google_client_id: str = os.getenv("GOOGLE_CLIENT_ID", "")
+    
     # CORS - Fixed format
     cors_origins: List[str] = [
         "http://localhost:3000",

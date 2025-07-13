@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { BarChart3, LineChart, ScatterChart, Activity } from 'lucide-react';
 import { apiService } from '@/lib/api';
 import PlotChart from './PlotChart';
+import { Modal } from '@/components/ui/modal';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -18,7 +19,11 @@ interface Dataset {
   description?: string;
 }
 
-export default function PlotGenerator() {
+interface PlotGeneratorProps {
+  refreshTrigger?: number;
+}
+
+export default function PlotGenerator({ refreshTrigger }: PlotGeneratorProps) {
   const [datasets, setDatasets] = useState<Dataset[]>([]);
   const [selectedDataset, setSelectedDataset] = useState<Dataset | null>(null);
   const [plotType, setPlotType] = useState('scatter');
@@ -28,17 +33,17 @@ export default function PlotGenerator() {
   const [plotData, setPlotData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
     loadDatasets();
-  }, []);
+  }, [refreshTrigger]);
 
   const loadDatasets = async () => {
     try {
       const response = await apiService.getDatasets();
       console.log('API Response:', response);
       
-      // The backend returns an array of datasets directly
       let datasetsArray = [];
       
       if (Array.isArray(response)) {
@@ -52,7 +57,6 @@ export default function PlotGenerator() {
         datasetsArray = [];
       }
       
-      // Transform the data to match the interface - backend uses these exact field names
       const transformedDatasets = datasetsArray.map(dataset => ({
         id: dataset.id || dataset._id,
         name: dataset.name,
@@ -96,11 +100,9 @@ export default function PlotGenerator() {
       console.log('Plot generation response:', response);
 
       if (response && response.success) {
-        // Extract the actual data array from the response
         let chartData = [];
         
         if (response.data) {
-          // If response.data is a Plotly object with data array
           if (response.data.data && Array.isArray(response.data.data)) {
             const plotlyTrace = response.data.data[0];
             if (plotlyTrace && plotlyTrace.x && plotlyTrace.y) {
@@ -109,18 +111,13 @@ export default function PlotGenerator() {
                 y: plotlyTrace.y[i]
               }));
             }
-          }
-          // If response.data is already an array
-          else if (Array.isArray(response.data)) {
+          } else if (Array.isArray(response.data)) {
             chartData = response.data;
-          }
-          // If it's raw data that needs processing
-          else {
+          } else {
             chartData = [];
           }
         }
 
-        // Create the structure that PlotChart expects
         const transformedPlotData = {
           plot: {
             id: Date.now().toString(),
@@ -130,11 +127,12 @@ export default function PlotGenerator() {
             title: response.title || title,
             datasetId: selectedDataset.id
           },
-          data: chartData // Ensure this is always an array
+          data: chartData
         };
         
         console.log('Transformed plot data:', transformedPlotData);
         setPlotData(transformedPlotData);
+        setShowModal(true);
       } else {
         setError(response?.message || 'Failed to generate plot');
       }
@@ -146,31 +144,28 @@ export default function PlotGenerator() {
     }
   };
 
-  const plotTypeIcons = {
-    scatter: ScatterChart,
-    line: LineChart,
-    bar: BarChart3,
-    histogram: Activity
+  const closeModal = () => {
+    setShowModal(false);
   };
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <BarChart3 className="h-5 w-5" />
+    <>
+      <Card className="w-full h-full border shadow-sm" style={{borderColor: '#d6d3d1', backgroundColor: '#fefdfb'}}>
+        <CardHeader className="border-b py-3" style={{backgroundColor: '#f5f4f1', borderColor: '#e7e5e4'}}>
+          <CardTitle className="flex items-center gap-2 text-base" style={{color: '#44403c'}}>
+            <BarChart3 className="h-4 w-4" />
             Generate Visualization
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-sm" style={{color: '#57534e'}}>
             Create interactive charts from your datasets
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Dataset</label>
+        <CardContent className="space-y-3 p-4 h-[calc(100%-90px)] overflow-y-auto">
+          <div className="grid grid-cols-1 gap-3">
+            <div className="space-y-1">
+              <label className="text-xs font-medium" style={{color: '#44403c'}}>Dataset</label>
               <Select value={selectedDataset?.id || ''} onValueChange={handleDatasetChange}>
-                <SelectTrigger>
+                <SelectTrigger className="h-8">
                   <SelectValue placeholder="Choose a dataset..." />
                 </SelectTrigger>
                 <SelectContent>
@@ -183,10 +178,10 @@ export default function PlotGenerator() {
               </Select>
             </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Plot Type</label>
+            <div className="space-y-1">
+              <label className="text-xs font-medium" style={{color: '#44403c'}}>Plot Type</label>
               <Select value={plotType} onValueChange={setPlotType}>
-                <SelectTrigger>
+                <SelectTrigger className="h-8">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -200,10 +195,10 @@ export default function PlotGenerator() {
 
             {selectedDataset && (
               <>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">X-Axis</label>
+                <div className="space-y-1">
+                  <label className="text-xs font-medium" style={{color: '#44403c'}}>X-Axis</label>
                   <Select value={xAxis} onValueChange={setXAxis}>
-                    <SelectTrigger>
+                    <SelectTrigger className="h-8">
                       <SelectValue placeholder="Select column..." />
                     </SelectTrigger>
                     <SelectContent>
@@ -215,10 +210,10 @@ export default function PlotGenerator() {
                 </div>
 
                 {(['scatter', 'line'].includes(plotType)) && (
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Y-Axis</label>
+                  <div className="space-y-1">
+                    <label className="text-xs font-medium" style={{color: '#44403c'}}>Y-Axis</label>
                     <Select value={yAxis} onValueChange={setYAxis}>
-                      <SelectTrigger>
+                      <SelectTrigger className="h-8">
                         <SelectValue placeholder="Select column..." />
                       </SelectTrigger>
                       <SelectContent>
@@ -230,22 +225,23 @@ export default function PlotGenerator() {
                   </div>
                 )}
 
-                <div className="md:col-span-2 space-y-2">
-                  <label className="text-sm font-medium">Title (Optional)</label>
+                <div className="space-y-1">
+                  <label className="text-xs font-medium" style={{color: '#44403c'}}>Title (Optional)</label>
                   <Input
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                     placeholder={`${plotType} plot of ${xAxis}${yAxis ? ` vs ${yAxis}` : ''}`}
+                    className="h-8 text-xs"
                   />
                 </div>
               </>
             )}
           </div>
 
-          {error && <p className="text-destructive text-sm">{error}</p>}
+          {error && <p className="text-destructive text-xs">{error}</p>}
           
           {datasets.length === 0 && !error && (
-            <p className="text-muted-foreground text-sm">
+            <p className="text-muted-foreground text-xs">
               No datasets found. Upload a CSV file to get started.
             </p>
           )}
@@ -253,16 +249,26 @@ export default function PlotGenerator() {
           <Button
             onClick={generatePlot}
             disabled={loading || !selectedDataset || !xAxis || (['scatter', 'line'].includes(plotType) && !yAxis)}
-            className="w-full"
+            className="w-full h-8 text-xs"
+            style={{backgroundColor: '#78716c', color: '#faf9f7'}}
           >
             {loading ? 'Generating...' : 'Generate Plot'}
           </Button>
         </CardContent>
       </Card>
 
-      {plotData && plotData.plot && Array.isArray(plotData.data) && (
-        <PlotChart plotData={plotData} />
-      )}    
-      </div>
+      <Modal 
+        isOpen={showModal} 
+        onClose={closeModal}
+        title={plotData?.plot?.title || 'Visualization'}
+        className="w-[90vw] h-[90vh]"
+      >
+        {plotData && plotData.plot && Array.isArray(plotData.data) && (
+          <div className="h-full">
+            <PlotChart plotData={plotData} />
+          </div>
+        )}
+      </Modal>
+    </>
   );
 }

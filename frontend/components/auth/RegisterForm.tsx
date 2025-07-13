@@ -57,6 +57,7 @@ export default function RegisterForm({ onSuccess, onToggleMode }: RegisterFormPr
       console.log('Registration response:', response);
       
       if (response.success) {
+        localStorage.setItem('access_token', response.token);
         localStorage.setItem('token', response.token);
         localStorage.setItem('user', JSON.stringify(response.user));
         onSuccess();
@@ -83,89 +84,125 @@ export default function RegisterForm({ onSuccess, onToggleMode }: RegisterFormPr
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-emerald-100 p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <CardTitle className="flex items-center justify-center gap-2 text-2xl">
-            <BarChart3 className="h-6 w-6" />
-            DataViz
-          </CardTitle>
-          <CardDescription>
-            Create an account to start visualizing data
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
+    <div className="min-h-screen flex bg-gradient-to-br from-warm-gray-50 via-emerald-50 to-green-50">
+      {/* Left side - Branding */}
+      <div className="hidden lg:flex lg:flex-1 lg:flex-col lg:justify-center lg:px-20 bg-gradient-to-br from-warm-gray-100 to-warm-gray-50">
+        <div className="max-w-md">
+          <div className="mb-8">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-3 bg-emerald-500 rounded-xl shadow-lg">
+                <BarChart3 className="h-8 w-8 text-white" />
+              </div>
+              <h1 className="text-3xl font-bold text-warm-gray-900">PlotCSV</h1>
+            </div>
+          </div>
+          <h2 className="text-5xl font-bold text-warm-gray-900 mb-6 leading-tight">
+            Start your<br />
+            <span className="text-emerald-500">data journey</span>
+          </h2>
+          <p className="text-lg text-warm-gray-600 leading-relaxed mb-8">
+            Create beautiful visualizations from your CSV data with ease.
+          </p>
+          <div className="flex items-center gap-4 p-4 bg-white/70 backdrop-blur-sm rounded-xl border border-warm-gray-200">
+            <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center">
+              <UserPlus className="w-5 h-5 text-emerald-600" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-warm-gray-900">Join to be the one</p>
+              <p className="text-sm text-warm-gray-600">visualizing data effortlessly.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Right side - Register Form */}
+      <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8 bg-white">
+        <div className="w-full max-w-sm">
+          {/* Mobile header */}
+          <div className="lg:hidden flex items-center justify-center gap-2 mb-8">
+            <div className="p-2 bg-emerald-500 rounded-lg">
+              <BarChart3 className="h-6 w-6 text-white" />
+            </div>
+            <span className="text-xl font-bold text-warm-gray-900">PlotCSV</span>
+          </div>
+
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium">Username</label>
               <Input
                 type="text"
                 required
                 value={formData.username}
                 onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                placeholder="Enter your username"
+                placeholder="Username"
+                className="h-12 border-warm-gray-300 bg-white focus:border-emerald-500 focus:ring-emerald-500/20 rounded-lg text-warm-gray-900 placeholder:text-warm-gray-400"
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium">Full Name</label>
               <Input
                 type="text"
                 required
                 value={formData.full_name}
                 onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-                placeholder="Enter your full name"
+                placeholder="Full Name"
+                className="h-12 border-warm-gray-300 bg-white focus:border-emerald-500 focus:ring-emerald-500/20 rounded-lg text-warm-gray-900 placeholder:text-warm-gray-400"
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium">Email</label>
               <Input
                 type="email"
                 required
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                placeholder="Enter your email"
+                placeholder="Email address"
+                className="h-12 border-warm-gray-300 bg-white focus:border-emerald-500 focus:ring-emerald-500/20 rounded-lg text-warm-gray-900 placeholder:text-warm-gray-400"
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium">Password</label>
               <Input
                 type="password"
                 required
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                placeholder="Enter your password"
+                placeholder="Password"
                 minLength={6}
+                className="h-12 border-warm-gray-300 bg-white focus:border-emerald-500 focus:ring-emerald-500/20 rounded-lg text-warm-gray-900 placeholder:text-warm-gray-400"
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium">Confirm Password</label>
               <Input
                 type="password"
                 required
                 value={formData.confirmPassword}
                 onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                placeholder="Confirm your password"
+                placeholder="Confirm Password"
                 minLength={6}
+                className="h-12 border-warm-gray-300 bg-white focus:border-emerald-500 focus:ring-emerald-500/20 rounded-lg text-warm-gray-900 placeholder:text-warm-gray-400"
               />
             </div>
-            {error && <p className="text-destructive text-sm">{error}</p>}
-            <Button type="submit" disabled={loading} className="w-full">
-              <UserPlus className="h-4 w-4 mr-2" />
-              {loading ? 'Creating Account...' : 'Sign up'}
+            {error && <p className="text-red-500 text-sm">{error}</p>}
+            <Button 
+              type="submit" 
+              disabled={loading} 
+              className="w-full h-12 bg-warm-gray-900 hover:bg-warm-gray-800 text-white font-medium rounded-lg transition-all duration-200"
+            >
+              {loading ? 'Creating Account...' : 'Create Account'}
             </Button>
-            <p className="text-center text-sm text-muted-foreground">
-              Already have an account?{' '}
-              <button
-                type="button"
-                onClick={onToggleMode}
-                className="font-medium text-primary hover:underline"
-              >
-                Sign in
-              </button>
-            </p>
+            
+            <div className="text-center pt-4">
+              <span className="text-sm text-warm-gray-600">
+                Already have an account?{' '}
+                <button
+                  type="button"
+                  onClick={onToggleMode}
+                  className="font-semibold text-emerald-600 hover:text-emerald-700 transition-colors"
+                >
+                  Sign in
+                </button>
+              </span>
+            </div>
           </form>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }

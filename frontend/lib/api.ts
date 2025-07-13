@@ -41,24 +41,41 @@ interface PlotData {
 
 interface PlotResponse {
   success: boolean;
-  plot: {
-    id: string;
-    title: string;
-    plotType: string;
-    xAxis: string;
-    yAxis: string;
-  };
-  data: PlotData[];
-  dataCount: number;
+}
+
+interface GoogleAuthData {
+  email: string;
+  name: string;
+  google_id: string;
 }
 
 class ApiService {
-  private getAuthHeaders() {
-    const token = localStorage.getItem('token');
-    return {
+  private getAuthToken(): string | null {
+    if (typeof window !== 'undefined') {
+      // Try both storage keys for compatibility
+      return localStorage.getItem('access_token') || localStorage.getItem('token');
+    }
+    return null;
+  }
+
+  private async makeRequest(url: string, options: RequestInit = {}): Promise<Response> {
+    const token = this.getAuthToken();
+    
+    const headers: HeadersInit = {
       'Content-Type': 'application/json',
-      ...(token && { Authorization: `Bearer ${token}` })
+      ...options.headers,
     };
+
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const response = await fetch(`${API_BASE_URL}${url}`, {
+      ...options,
+      headers,
+    });
+
+    return response;
   }
 
   async login(data: LoginData): Promise<AuthResponse> {
@@ -103,7 +120,7 @@ class ApiService {
     formData.append('datasetName', datasetName);
     if (description) formData.append('description', description);
 
-    const token = localStorage.getItem('token');
+    const token = this.getAuthToken();
     const response = await fetch(`${API_BASE_URL}/data/upload`, {
       method: 'POST',
       headers: {
@@ -115,9 +132,7 @@ class ApiService {
   }
 
   async getDatasets(): Promise<{ datasets: Dataset[] }> {
-    const response = await fetch(`${API_BASE_URL}/data/datasets`, {
-      headers: this.getAuthHeaders()
-    });
+    const response = await this.makeRequest('/data/datasets');
     return response.json();
   }
 
@@ -129,12 +144,34 @@ class ApiService {
     title?: string;
     filters?: any;
   }): Promise<PlotResponse> {
-    const response = await fetch(`${API_BASE_URL}/plots/generate`, {
+    const response = await this.makeRequest('/plots/generate', {
       method: 'POST',
-      headers: this.getAuthHeaders(),
       body: JSON.stringify(plotData)
     });
     return response.json();
+  }
+
+  async googleAuth(googleData: GoogleAuthData): Promise<AuthResponse> {
+    const response = await this.makeRequest('/auth/google', {
+      method: 'POST',
+      body: JSON.stringify(googleData),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || 'Google authentication failed');
+    }
+
+    const data = await response.json();
+    
+    // Store the backend JWT token consistently
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('access_token', data.token);
+      localStorage.setItem('token', data.token); // Keep both for compatibility
+      localStorage.setItem('user', JSON.stringify(data.user));
+    }
+
+    return data;
   }
 }
 

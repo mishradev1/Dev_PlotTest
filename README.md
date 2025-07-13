@@ -21,12 +21,6 @@ A full-stack web application for uploading CSV files and creating interactive da
 - **Recent Files**: View and manage uploaded datasets with metadata
 - **Data Preview**: Quick overview of uploaded CSV structure
 
-### Visualization Engine
-- **Multiple Plot Types**: Scatter, line, bar charts, and histograms
-- **Dynamic Axis Selection**: Choose X and Y axes from available columns
-- **Interactive Charts**: Hover effects and data point details
-- **Export Options**: Save plots as images or share insights
-
 ## 🛠️ Tech Stack
 
 ### Backend (Python/FastAPI)
@@ -240,30 +234,6 @@ npm start
 # Type checking
 npm run type-check
 ```
-
-## 🚀 Deployment
-
-### Backend Deployment
-- Deploy to platforms like Railway, Render, or DigitalOcean
-- Use MongoDB Atlas for production database
-- Set environment variables in deployment platform
-
-### Frontend Deployment
-- Deploy to Vercel, Netlify, or similar platforms
-- Configure environment variables
-- Update API URLs for production
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
-
-## 📝 License
-
-This project is licensed under the MIT License.
 
 ## 🆘 Troubleshooting
 

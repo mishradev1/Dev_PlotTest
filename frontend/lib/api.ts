@@ -30,8 +30,9 @@ interface Dataset {
   id: string;
   name: string;
   columns: string[];
-  rowCount: number;
-  createdAt: string;
+  row_count: number;
+  created_at: string;
+  description?: string;
 }
 
 interface DatasetsResponse {
@@ -133,7 +134,7 @@ class ApiService {
     return response.json();
   }
 
-  async getDatasets(): Promise<DatasetsResponse | Dataset[]> {
+  async getDatasets(): Promise<DatasetsResponse> {
     const response = await this.makeRequest('/data/datasets');
     return response.json();
   }

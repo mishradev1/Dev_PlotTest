@@ -138,7 +138,7 @@ class ApiService {
     xAxis: string;
     yAxis?: string;
     title?: string;
-    filters?: any;
+    filters?: Record<string, unknown>;
   }): Promise<PlotResponse> {
     const response = await this.makeRequest('/plots/generate', {
       method: 'POST',

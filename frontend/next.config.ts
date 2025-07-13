@@ -5,7 +5,10 @@ const nextConfig: NextConfig = {
     domains: ['lh3.googleusercontent.com'],
   },
   env: {
-    NEXTAUTH_URL: process.env.NEXTAUTH_URL,
+    NEXTAUTH_URL: process.env.NEXTAUTH_URL || 
+      (process.env.NODE_ENV === 'production' 
+        ? 'https://your-domain.com' 
+        : 'http://localhost:3000'),
   },
 };
 

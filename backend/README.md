@@ -221,6 +221,25 @@ black app/
 
 ## Deployment
 
+### Environment Variables for Production
+```env
+# Production Backend
+MONGODB_URL=mongodb+srv://username:password@cluster.mongodb.net/plotcsv_prod
+DATABASE_NAME=plotcsv_production
+JWT_SECRET_KEY=your-super-secure-production-secret
+ALLOWED_ORIGINS=https://your-frontend-domain.com,https://your-app.vercel.app
+```
+
+### Frontend Environment Variables
+```env
+# Production Frontend
+NEXTAUTH_URL=https://your-frontend-domain.com
+NEXTAUTH_SECRET=your-nextauth-production-secret
+NEXT_PUBLIC_API_URL=https://your-backend-domain.com/api
+GOOGLE_CLIENT_ID=your-google-oauth-client-id
+GOOGLE_CLIENT_SECRET=your-google-oauth-client-secret
+```
+
 ### Docker
 ```bash
 docker build -t plotcsv-backend .
@@ -233,4 +252,7 @@ docker run -p 8000:8000 plotcsv-backend
 - Set up proper logging and monitoring
 - Enable HTTPS with SSL certificates
 - Configure environment-specific settings
+- Update Google OAuth redirect URIs for production domain
+- Set CORS origins to production frontend URL
+```
 

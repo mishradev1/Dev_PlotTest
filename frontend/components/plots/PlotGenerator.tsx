@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { BarChart3, LineChart, ScatterChart, Activity } from 'lucide-react';
+import { BarChart3 } from 'lucide-react';
 import { apiService } from '@/lib/api';
 import PlotChart from './PlotChart';
 import { Modal } from '@/components/ui/modal';
@@ -67,9 +67,10 @@ export default function PlotGenerator({ refreshTrigger }: PlotGeneratorProps) {
       }));
       
       setDatasets(transformedDatasets);
-    } catch (err: any) {
-      console.error('Failed to load datasets:', err);
-      setError('Failed to load datasets: ' + (err.message || 'Unknown error'));
+    } catch (err: unknown) {
+      const error = err as Error;
+      console.error('Failed to load datasets:', error);
+      setError('Failed to load datasets: ' + (error.message || 'Unknown error'));
       setDatasets([]);
     }
   };
@@ -136,9 +137,10 @@ export default function PlotGenerator({ refreshTrigger }: PlotGeneratorProps) {
       } else {
         setError(response?.message || 'Failed to generate plot');
       }
-    } catch (err: any) {
-      console.error('Plot generation error:', err);
-      setError('Failed to generate plot: ' + (err.message || 'Unknown error'));
+    } catch (err: unknown) {
+      const error = err as Error;
+      console.error('Plot generation error:', error);
+      setError('Failed to generate plot: ' + (error.message || 'Unknown error'));
     } finally {
       setLoading(false);
     }

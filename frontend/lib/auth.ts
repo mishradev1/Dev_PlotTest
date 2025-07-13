@@ -94,8 +94,8 @@ export const authOptions: NextAuthOptions = {
             console.error('Backend Google auth failed:', data)
             return false
           }
-        } catch (error) {
-          console.error('Google sign-in error:', error)
+        } catch {
+          console.error('Google sign-in error')
           return false
         }
       }

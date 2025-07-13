@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { apiService } from '@/lib/api';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { UserPlus, BarChart3 } from 'lucide-react';
 
@@ -86,8 +85,8 @@ export default function RegisterForm({ onSuccess, onToggleMode }: RegisterFormPr
   return (
     <div className="min-h-screen flex bg-gradient-to-br from-warm-gray-50 via-emerald-50 to-green-50">
       {/* Left side - Branding */}
-      <div className="hidden lg:flex lg:flex-1 lg:flex-col lg:justify-center lg:px-20 bg-gradient-to-br from-warm-gray-100 to-warm-gray-50">
-        <div className="max-w-md">
+      <div className="hidden lg:flex lg:flex-1 lg:flex-col lg:justify-center lg:items-center lg:px-20 bg-gradient-to-br from-warm-gray-100 to-warm-gray-50">
+        <div className="max-w-md text-center">
           <div className="mb-8">
             <div className="flex items-center gap-3 mb-6">
               <div className="p-3 bg-emerald-500 rounded-xl shadow-lg">

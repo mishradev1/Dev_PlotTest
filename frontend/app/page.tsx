@@ -26,7 +26,12 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(true);
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
   const [refreshData, setRefreshData] = useState(0);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<{
+    id?: string;
+    email?: string;
+    username?: string;
+    name?: string;
+  } | null>(null);
   const [recentUploads, setRecentUploads] = useState<Dataset[]>([]);
 
   useEffect(() => {
@@ -93,8 +98,9 @@ export default function Home() {
       }));
       
       setRecentUploads(transformedDatasets);
-    } catch (err: any) {
-      console.error('Failed to load recent uploads:', err);
+    } catch (err: unknown) {
+      const error = err as Error;
+      console.error('Failed to load recent uploads:', error);
       setRecentUploads([]);
     }
   };

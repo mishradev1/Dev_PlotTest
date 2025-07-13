@@ -117,7 +117,8 @@ module.exports = {
   		},
   		animation: {
   			'accordion-down': 'accordion-down 0.2s ease-out',
-  			'accordion-up': 'accordion-up 0.2s ease-out'
+  			'accordion-up': 'accordion-up 0.2s ease-out',
+  			'strike-through': 'strike-through 2s ease-in-out 1s forwards'
   		}
   	}
   },

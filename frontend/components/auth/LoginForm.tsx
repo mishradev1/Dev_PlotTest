@@ -4,9 +4,8 @@ import { useState, useEffect } from 'react';
 import { signIn, getSession } from 'next-auth/react';
 import { apiService } from '@/lib/api';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { LogIn, BarChart3 } from 'lucide-react';
+import { BarChart3 } from 'lucide-react';
 
 interface LoginFormProps {
   onSuccess: () => void;

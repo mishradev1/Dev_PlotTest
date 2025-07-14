@@ -2,6 +2,8 @@
 
 A full-stack web application for uploading CSV files and creating interactive data visualizations with dynamic axis selection. Features a modern Claude-inspired UI design with smooth animations and responsive layout.
 
+Video Walkthrough - https://drive.google.com/file/d/1n5dx1k3CyKlGPna2UO_t3o_30VV6_jkS/view?usp=sharing
+
 ## 🚀 Features
 
 ### Authentication & Security
